@@ -1,0 +1,13 @@
+{
+  "name": "platevision",
+  "version": "1.0.0",
+  "description": "PlateVision — Automatic Number Plate Recognition (ANPR) Web Application",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx -y serve@latest -l 3000 -s .",
+    "start": "npx -y serve@latest -l 3000 -s ."
+  },
+  "keywords": ["anpr", "ocr", "opencv", "tesseract", "number-plate", "recognition"],
+  "author": "",
+  "license": "MIT"
+}

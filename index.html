@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PlateVision — Automatic Number Plate Recognition</title>
+  <meta name="description" content="PlateVision is a modern, client-side ANPR web application that detects and reads vehicle license plates using OpenCV.js and Tesseract.js.">
+  <meta name="keywords" content="ANPR, number plate recognition, OCR, OpenCV, Tesseract, license plate, DIP">
+  <meta name="theme-color" content="#3b82f6">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- ═══ Library Loading Overlay ═══ -->
+  <div class="lib-loading-overlay" id="libLoadingOverlay">
+    <div class="lib-loading-spinner"></div>
+    <div class="lib-loading-text" id="libLoadingText">Loading PlateVision...</div>
+    <div class="lib-loading-sub" id="libLoadingSub">Initializing OpenCV.js & Tesseract.js engines</div>
+  </div>
+
+  <!-- ═══ Header ═══ -->
+  <header class="app-header" id="appHeader">
+    <div class="header-inner">
+      <div class="logo" id="logoBtn">
+        <div class="logo-icon">🔍</div>
+        <span>PlateVision</span>
+      </div>
+
+      <ul class="nav-tabs" id="navTabs">
+        <li class="nav-tab active" data-tab="dashboard">
+          <span class="nav-tab-icon">📊</span>
+          Dashboard
+        </li>
+        <li class="nav-tab" data-tab="algorithm">
+          <span class="nav-tab-icon">⚙️</span>
+          Algorithm
+        </li>
+        <li class="nav-tab" data-tab="documentation">
+          <span class="nav-tab-icon">📚</span>
+          Documentation
+        </li>
+      </ul>
+
+      <div class="header-actions">
+        <a class="github-link" href="https://github.com" target="_blank" rel="noopener noreferrer">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          GitHub
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══ Main Content ═══ -->
+  <main class="app-main">
+    
+    <!-- ─── Dashboard Tab ─── -->
+    <section class="tab-panel active" id="tab-dashboard">
+      
+      <!-- Hero -->
+      <div class="dashboard-hero">
+        <h1>Automatic <span class="gradient-text">Number Plate</span> Recognition</h1>
+        <p>Upload a vehicle image and watch the AI pipeline detect and read the license plate in real-time.</p>
+      </div>
+
+      <!-- Dashboard Grid -->
+      <div class="dashboard-grid">
+        
+        <!-- Left — Upload & Preview -->
+        <div class="card" id="uploadCard">
+          <div class="card-header">
+            <div class="card-header-icon blue">📷</div>
+            <h3>Input Image</h3>
+          </div>
+
+          <!-- Upload Zone -->
+          <div class="upload-zone" id="uploadZone">
+            <div class="upload-zone-content">
+              <div class="upload-icon">📁</div>
+              <h4>Drop your image here</h4>
+              <p>or <span class="browse-btn">browse files</span> to upload</p>
+              <p style="margin-top: 8px; font-size: 0.75rem;">Supports JPG, PNG, BMP, SVGs</p>
+              
+              <!-- Sample Plates Selection -->
+              <div class="sample-plates" id="samplePlates">
+                <p style="margin: 15px 0 8px; font-size: 0.85rem; font-weight: 600; color: #555;">Or try our simulated samples:</p>
+                <div class="sample-pills" style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+                  <button class="btn btn-sm btn-outline" data-src="samples/plate1.svg">🚗 Private Plate</button>
+                  <button class="btn btn-sm btn-outline" data-src="samples/plate2.svg">🚕 Commercial</button>
+                  <button class="btn btn-sm btn-outline" data-src="samples/plate3.svg">🚙 BH Series</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <input type="file" class="upload-input" id="uploadInput" accept="image/*">
+
+          <!-- Image Preview -->
+          <div class="image-preview-container" id="imagePreview">
+            <div class="image-preview-wrapper">
+              <canvas id="previewCanvas"></canvas>
+              <!-- Processing Overlay -->
+              <div class="processing-overlay" id="processingOverlay">
+                <div class="scanner-line"></div>
+                <div class="processing-text">
+                  <div class="spinner"></div>
+                  <span id="processingStatus">Analyzing image...</span>
+                </div>
+              </div>
+            </div>
+            <div class="image-preview-actions">
+              <button class="btn btn-primary btn-sm" id="processBtn">
+                🔍 Detect Plate
+              </button>
+              <button class="btn btn-secondary btn-sm" id="newImageBtn">
+                📷 New Image
+              </button>
+              <button class="btn btn-danger btn-sm" id="clearBtn">
+                ✕ Clear
+              </button>
+            </div>
+          </div>
+
+          <!-- Status Messages -->
+          <div class="status-message" id="statusMessage">
+            <span id="statusIcon">⚠️</span>
+            <span id="statusText"></span>
+          </div>
+        </div>
+
+        <!-- Right — Results -->
+        <div class="card" id="resultCard">
+          <div class="card-header">
+            <div class="card-header-icon green">✅</div>
+            <h3>Recognition Result</h3>
+          </div>
+
+          <!-- Empty State -->
+          <div id="emptyResult" style="text-align: center; padding: 60px 20px; color: var(--text-tertiary);">
+            <div style="font-size: 3rem; margin-bottom: 16px; opacity: 0.4;">🔎</div>
+            <p style="font-weight: 500;">No plate detected yet</p>
+            <p style="font-size: 0.82rem; margin-top: 4px;">Upload an image and click "Detect Plate" to start</p>
+          </div>
+
+          <!-- Result Display -->
+          <div class="result-card" id="resultDisplay">
+            <div class="result-plate">
+              <div class="result-plate-text" id="resultPlateText">--</div>
+            </div>
+            <div class="result-meta">
+              <div class="result-meta-item">
+                <div class="result-meta-label">Confidence</div>
+                <div class="result-meta-value" id="resultConfidence">--</div>
+              </div>
+              <div class="result-meta-item">
+                <div class="result-meta-label">Processing Time</div>
+                <div class="result-meta-value" id="resultTime">--</div>
+              </div>
+              <div class="result-meta-item">
+                <div class="result-meta-label">Plate Region</div>
+                <div class="result-meta-value" id="resultRegion">--</div>
+              </div>
+              <div class="result-meta-item">
+                <div class="result-meta-label">Characters</div>
+                <div class="result-meta-value" id="resultChars">--</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pipeline Visualization -->
+      <div class="pipeline-section" id="pipelineSection">
+        <div class="section-header">
+          <h2>🔬 Processing Pipeline</h2>
+          <span class="badge">Step-by-Step</span>
+        </div>
+        <div class="pipeline-grid" id="pipelineGrid">
+          <!-- Steps are dynamically added by app.js -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── Algorithm Tab ─── -->
+    <section class="tab-panel" id="tab-algorithm">
+      <div class="algorithm-section">
+        <h1>⚙️ How the <span class="gradient-text">Algorithm</span> Works</h1>
+        <p class="subtitle">A step-by-step breakdown of the ANPR image processing pipeline.</p>
+
+        <!-- Step 1: Grayscale -->
+        <div class="algo-step">
+          <div class="algo-step-header">
+            <div class="algo-step-number">1</div>
+            <div>
+              <div class="algo-step-title">Grayscale Conversion</div>
+              <div class="algo-step-subtitle">Reduce color channels to simplify processing</div>
+            </div>
+          </div>
+          <div class="algo-step-body">
+            <p>The first step converts the input image from a 3-channel BGR (Blue-Green-Red) color space to a single-channel grayscale image. This reduces computational complexity while preserving the structural information needed for edge detection.</p>
+            <pre><code><span class="code-comment">// Convert to grayscale using OpenCV.js</span>
+<span class="code-keyword">let</span> gray = <span class="code-keyword">new</span> <span class="code-function">cv.Mat</span>();
+<span class="code-function">cv.cvtColor</span>(src, gray, <span class="code-function">cv.COLOR_RGBA2GRAY</span>);</code></pre>
+            <p>Each pixel's intensity is calculated as: <code>Y = 0.299R + 0.587G + 0.114B</code>, which weights green the highest since human vision is most sensitive to it.</p>
+          </div>
+        </div>
+
+        <div class="flow-connector"><div class="arrow"></div></div>
+
+        <!-- Step 2: Bilateral Filter -->
+        <div class="algo-step">
+          <div class="algo-step-header">
+            <div class="algo-step-number">2</div>
+            <div>
+              <div class="algo-step-title">Bilateral Filtering</div>
+              <div class="algo-step-subtitle">Noise reduction while preserving edges</div>
+            </div>
+          </div>
+          <div class="algo-step-body">
+            <p>A bilateral filter smooths the image while keeping sharp edges intact. Unlike Gaussian blur which smooths everything uniformly, a bilateral filter considers both spatial distance and intensity difference — so edges between the plate and background remain crisp.</p>
+            <pre><code><span class="code-comment">// Apply bilateral filter</span>
+<span class="code-keyword">let</span> filtered = <span class="code-keyword">new</span> <span class="code-function">cv.Mat</span>();
+<span class="code-function">cv.bilateralFilter</span>(gray, filtered, <span class="code-number">11</span>, <span class="code-number">17</span>, <span class="code-number">17</span>);</code></pre>
+            <p>Parameters: <code>d=11</code> (diameter), <code>sigmaColor=17</code> (color similarity range), <code>sigmaSpace=17</code> (spatial extent).</p>
+          </div>
+        </div>
+
+        <div class="flow-connector"><div class="arrow"></div></div>
+
+        <!-- Step 3: Edge Detection -->
+        <div class="algo-step">
+          <div class="algo-step-header">
+            <div class="algo-step-number">3</div>
+            <div>
+              <div class="algo-step-title">Canny Edge Detection</div>
+              <div class="algo-step-subtitle">Find boundaries between regions</div>
+            </div>
+          </div>
+          <div class="algo-step-body">
+            <p>The Canny edge detector finds rapid intensity transitions (edges) in the image. It uses a multi-stage algorithm: Gaussian smoothing → gradient computation → non-maximum suppression → hysteresis thresholding. The result is a binary image where white pixels represent detected edges.</p>
+            <pre><code><span class="code-comment">// Canny edge detection with auto thresholds</span>
+<span class="code-keyword">let</span> edges = <span class="code-keyword">new</span> <span class="code-function">cv.Mat</span>();
+<span class="code-function">cv.Canny</span>(filtered, edges, <span class="code-number">30</span>, <span class="code-number">200</span>);</code></pre>
+            <p>Lower threshold (30) and upper threshold (200) control sensitivity. A high ratio (1:6) helps detect strong edges while suppressing noise.</p>
+          </div>
+        </div>
+
+        <div class="flow-connector"><div class="arrow"></div></div>
+
+        <!-- Step 4: Contour Detection -->
+        <div class="algo-step">
+          <div class="algo-step-header">
+            <div class="algo-step-number">4</div>
+            <div>
+              <div class="algo-step-title">Contour Detection & Filtering</div>
+              <div class="algo-step-subtitle">Locate rectangular plate-shaped regions</div>
+            </div>
+          </div>
+          <div class="algo-step-body">
+            <p>Contours are extracted from the edge map and filtered based on geometric properties of number plates: rectangular shape (4 corners), aspect ratio between 2:1 and 6:1, and sufficient area. The largest qualifying contour is selected as the most likely plate.</p>
+            <pre><code><span class="code-comment">// Find and filter contours</span>
+<span class="code-keyword">let</span> contours = <span class="code-keyword">new</span> <span class="code-function">cv.MatVector</span>();
+<span class="code-function">cv.findContours</span>(edges, contours, hierarchy,
+  <span class="code-function">cv.RETR_TREE</span>, <span class="code-function">cv.CHAIN_APPROX_SIMPLE</span>);
+
+<span class="code-comment">// Filter: 4-sided polygon with plate-like ratio</span>
+<span class="code-keyword">for</span> (<span class="code-keyword">let</span> i = <span class="code-number">0</span>; i < contours.size(); i++) {
+  <span class="code-keyword">let</span> approx = <span class="code-function">cv.approxPolyDP</span>(contours.get(i), epsilon);
+  <span class="code-keyword">if</span> (approx.rows === <span class="code-number">4</span> && aspectRatio >= <span class="code-number">2</span> && aspectRatio <= <span class="code-number">6</span>)
+    candidates.push(contours.get(i));
+}</code></pre>
+          </div>
+        </div>
+
+        <div class="flow-connector"><div class="arrow"></div></div>
+
+        <!-- Step 5: Plate Extraction -->
+        <div class="algo-step">
+          <div class="algo-step-header">
+            <div class="algo-step-number">5</div>
+            <div>
+              <div class="algo-step-title">Plate Extraction & Enhancement</div>
+              <div class="algo-step-subtitle">Crop, warp, and threshold for OCR</div>
+            </div>
+          </div>
+          <div class="algo-step-body">
+            <p>The detected plate region is cropped with padding, perspective-corrected if tilted, resized to 3x for better OCR, and then binarized using adaptive thresholding. Morphological closing fills small gaps in characters.</p>
+            <pre><code><span class="code-comment">// Enhance for OCR</span>
+<span class="code-function">cv.resize</span>(plate, resized, <span class="code-keyword">new</span> <span class="code-function">cv.Size</span>(w*<span class="code-number">3</span>, h*<span class="code-number">3</span>));
+<span class="code-function">cv.adaptiveThreshold</span>(resized, binary,
+  <span class="code-number">255</span>, <span class="code-function">cv.ADAPTIVE_THRESH_GAUSSIAN_C</span>,
+  <span class="code-function">cv.THRESH_BINARY</span>, <span class="code-number">11</span>, <span class="code-number">2</span>);</code></pre>
+          </div>
+        </div>
+
+        <div class="flow-connector"><div class="arrow"></div></div>
+
+        <!-- Step 6: OCR -->
+        <div class="algo-step">
+          <div class="algo-step-header">
+            <div class="algo-step-number">6</div>
+            <div>
+              <div class="algo-step-title">OCR — Text Recognition</div>
+              <div class="algo-step-subtitle">Read characters using Tesseract.js</div>
+            </div>
+          </div>
+          <div class="algo-step-body">
+            <p>The enhanced plate image is fed into Tesseract.js for Optical Character Recognition. We use PSM 7 (single text line mode) with a whitelist of A-Z and 0-9 for better accuracy. Post-processing cleans up noise characters and validates the format.</p>
+            <pre><code><span class="code-comment">// Tesseract.js OCR</span>
+<span class="code-keyword">const</span> result = <span class="code-keyword">await</span> <span class="code-function">Tesseract.recognize</span>(plateCanvas, <span class="code-string">'eng'</span>, {
+  tessedit_char_whitelist: <span class="code-string">'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'</span>,
+  tessedit_pageseg_mode: <span class="code-string">'7'</span>  <span class="code-comment">// Single line</span>
+});
+<span class="code-keyword">const</span> text = result.data.text.trim();</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── Documentation Tab ─── -->
+    <section class="tab-panel" id="tab-documentation">
+      <div class="docs-section">
+        <h1>📚 DIP Concepts <span class="gradient-text">Documentation</span></h1>
+        <p class="subtitle">Understanding the Digital Image Processing techniques used in PlateVision.</p>
+
+        <!-- Doc: Grayscale -->
+        <div class="doc-card" id="doc-grayscale">
+          <div class="doc-card-header" onclick="toggleDoc('doc-grayscale')">
+            <div class="doc-card-icon blue">🌗</div>
+            <div class="doc-card-title">Grayscale Conversion</div>
+            <div class="doc-card-toggle">▼</div>
+          </div>
+          <div class="doc-card-body">
+            <p>Grayscale conversion transforms a color image into shades of gray. Each pixel's RGB values are combined into a single luminance value using the formula:</p>
+            <div class="formula-block">Y = 0.299 × R + 0.587 × G + 0.114 × B</div>
+            <p>This weighted average reflects human visual perception — our eyes are most sensitive to green light, which is why it has the highest weight. Converting to grayscale reduces data from 3 channels to 1, making subsequent operations 3× faster.</p>
+            <ul>
+              <li><strong>Input:</strong> 3-channel RGB image (24-bit per pixel)</li>
+              <li><strong>Output:</strong> 1-channel grayscale image (8-bit per pixel)</li>
+              <li><strong>Why:</strong> Most structural features (edges, shapes) don't depend on color</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Doc: Bilateral Filter -->
+        <div class="doc-card" id="doc-bilateral">
+          <div class="doc-card-header" onclick="toggleDoc('doc-bilateral')">
+            <div class="doc-card-icon purple">🧹</div>
+            <div class="doc-card-title">Bilateral Filtering</div>
+            <div class="doc-card-toggle">▼</div>
+          </div>
+          <div class="doc-card-body">
+            <p>A bilateral filter is an edge-preserving, noise-reducing smoothing filter. Unlike Gaussian blur which uses only spatial distance, bilateral filtering also considers the intensity difference between pixels:</p>
+            <div class="formula-block">BF[I]ₚ = (1 / Wₚ) Σ G_σs(‖p - q‖) · G_σr(|Iₚ - Iq|) · Iq</div>
+            <p>Where <code>G_σs</code> is the spatial Gaussian (nearby pixels have more influence) and <code>G_σr</code> is the range Gaussian (similar-intensity pixels have more influence). This means edges are preserved because pixels across an edge have very different intensities.</p>
+            <ul>
+              <li><strong>Key parameters:</strong> <code>d</code> (filter diameter), <code>σ_color</code>, <code>σ_space</code></li>
+              <li><strong>Effect:</strong> Smooths textures/noise while keeping plate boundaries sharp</li>
+              <li><strong>Trade-off:</strong> Slower than Gaussian blur, but much better for ANPR</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Doc: Canny -->
+        <div class="doc-card" id="doc-canny">
+          <div class="doc-card-header" onclick="toggleDoc('doc-canny')">
+            <div class="doc-card-icon green">📐</div>
+            <div class="doc-card-title">Canny Edge Detection</div>
+            <div class="doc-card-toggle">▼</div>
+          </div>
+          <div class="doc-card-body">
+            <p>The Canny edge detector is a multi-stage algorithm that produces thin, precise edges:</p>
+            <ul>
+              <li><strong>Stage 1 — Gaussian Smoothing:</strong> Remove noise to avoid false edges</li>
+              <li><strong>Stage 2 — Gradient Computation:</strong> Compute intensity gradients using Sobel operators to find direction and magnitude of change</li>
+              <li><strong>Stage 3 — Non-Maximum Suppression:</strong> Thin edges to 1-pixel width by keeping only local maxima in the gradient direction</li>
+              <li><strong>Stage 4 — Hysteresis Thresholding:</strong> Use two thresholds — strong edges (above upper) are kept, weak edges (between lower and upper) are kept only if connected to strong edges</li>
+            </ul>
+            <div class="formula-block">G = √(Gx² + Gy²), θ = arctan(Gy / Gx)</div>
+            <p>The output is a binary image where white pixels represent edge locations. The dual-threshold approach makes Canny more robust than simple threshold-based edge detectors.</p>
+          </div>
+        </div>
+
+        <!-- Doc: Contours -->
+        <div class="doc-card" id="doc-contours">
+          <div class="doc-card-header" onclick="toggleDoc('doc-contours')">
+            <div class="doc-card-icon cyan">📦</div>
+            <div class="doc-card-title">Contour Detection & Polygon Approximation</div>
+            <div class="doc-card-toggle">▼</div>
+          </div>
+          <div class="doc-card-body">
+            <p>Contour detection traces the boundaries of connected white regions in a binary image. OpenCV's <code>findContours</code> returns a list of point sequences representing each closed boundary.</p>
+            <p><strong>Polygon Approximation</strong> (Douglas-Peucker algorithm) simplifies contours by reducing the number of vertices while preserving shape:</p>
+            <div class="formula-block">ε = α × arcLength(contour)</div>
+            <p>Where <code>ε</code> is the maximum distance between the original contour and its approximation. For number plate detection, we set <code>α = 0.018</code> and look for approximations with exactly 4 vertices (quadrilaterals).</p>
+            <ul>
+              <li><strong>RETR_TREE:</strong> Retrieves all contours in a hierarchical structure</li>
+              <li><strong>CHAIN_APPROX_SIMPLE:</strong> Compresses horizontal/vertical/diagonal segments to endpoints only</li>
+              <li><strong>Filtering:</strong> Aspect ratio 2–6, area > threshold, 4-sided polygon</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Doc: Perspective Transform -->
+        <div class="doc-card" id="doc-perspective">
+          <div class="doc-card-header" onclick="toggleDoc('doc-perspective')">
+            <div class="doc-card-icon orange">🔄</div>
+            <div class="doc-card-title">Perspective Transform</div>
+            <div class="doc-card-toggle">▼</div>
+          </div>
+          <div class="doc-card-body">
+            <p>When a plate is viewed at an angle, it appears as a trapezoid rather than a rectangle. Perspective transform corrects this by mapping the 4 corner points of the detected plate to a rectangular output.</p>
+            <div class="formula-block">M = getPerspectiveTransform(srcPoints, dstPoints)</div>
+            <p>The 3×3 transformation matrix <code>M</code> maps each source point to its corresponding destination point. <code>warpPerspective</code> applies this transform to produce a front-facing view of the license plate.</p>
+            <ul>
+              <li><strong>Input:</strong> 4 corner points of the detected plate contour</li>
+              <li><strong>Output:</strong> A flat, rectangular crop of the plate</li>
+              <li><strong>Benefit:</strong> Dramatically improves OCR accuracy for angled plates</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Doc: Adaptive Threshold -->
+        <div class="doc-card" id="doc-threshold">
+          <div class="doc-card-header" onclick="toggleDoc('doc-threshold')">
+            <div class="doc-card-icon blue">⬛</div>
+            <div class="doc-card-title">Adaptive Thresholding</div>
+            <div class="doc-card-toggle">▼</div>
+          </div>
+          <div class="doc-card-body">
+            <p>Unlike global thresholding which uses a single cutoff value for the entire image, adaptive thresholding computes a different threshold for each pixel based on its local neighborhood:</p>
+            <div class="formula-block">T(x,y) = μ(x,y) - C</div>
+            <p>Where <code>μ(x,y)</code> is the weighted mean of the neighborhood (Gaussian weighting) and <code>C</code> is a constant. Pixels brighter than their local threshold become white (characters), darker ones become black (background).</p>
+            <ul>
+              <li><strong>Block Size:</strong> 11 (neighborhood size for computing local mean)</li>
+              <li><strong>C:</strong> 2 (constant subtracted from mean)</li>
+              <li><strong>Advantage:</strong> Handles uneven lighting, shadows, and varying plate colors</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Doc: Morphological Ops -->
+        <div class="doc-card" id="doc-morphology">
+          <div class="doc-card-header" onclick="toggleDoc('doc-morphology')">
+            <div class="doc-card-icon purple">🧱</div>
+            <div class="doc-card-title">Morphological Operations</div>
+            <div class="doc-card-toggle">▼</div>
+          </div>
+          <div class="doc-card-body">
+            <p>Morphological operations modify shapes in binary images using a structuring element (kernel). Two fundamental operations:</p>
+            <ul>
+              <li><strong>Dilation:</strong> Expands white regions — useful for filling small gaps in characters</li>
+              <li><strong>Erosion:</strong> Shrinks white regions — useful for removing small noise dots</li>
+              <li><strong>Opening:</strong> Erosion → Dilation — removes noise while preserving shape</li>
+              <li><strong>Closing:</strong> Dilation → Erosion — fills small holes in characters</li>
+            </ul>
+            <p>In PlateVision, we apply <strong>morphological closing</strong> with a small rectangular kernel to connect broken character segments, making OCR more reliable.</p>
+          </div>
+        </div>
+
+        <!-- Doc: OCR -->
+        <div class="doc-card" id="doc-ocr">
+          <div class="doc-card-header" onclick="toggleDoc('doc-ocr')">
+            <div class="doc-card-icon red">🔤</div>
+            <div class="doc-card-title">Optical Character Recognition (OCR)</div>
+            <div class="doc-card-toggle">▼</div>
+          </div>
+          <div class="doc-card-body">
+            <p>OCR converts images of text into machine-readable strings. Tesseract uses a multi-step approach:</p>
+            <ul>
+              <li><strong>Layout Analysis:</strong> Identifies text regions and lines (PSM 7 = single text line)</li>
+              <li><strong>Character Segmentation:</strong> Isolates individual characters from the text line</li>
+              <li><strong>Feature Extraction:</strong> Extracts shape features from each character</li>
+              <li><strong>Recognition:</strong> Uses LSTM neural networks trained on fonts to classify characters</li>
+              <li><strong>Post-Processing:</strong> Dictionary lookup and language model for correction</li>
+            </ul>
+            <p>For license plates, we restrict the character set to <code>A-Z</code> and <code>0-9</code> (whitelist), which eliminates common misreadings like <code>O</code>→<code>0</code> confusion and dramatically improves accuracy.</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- ═══ Lightbox for Pipeline Images ═══ -->
+  <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+    <canvas id="lightboxCanvas"></canvas>
+  </div>
+
+  <!-- ═══ Footer ═══ -->
+  <footer class="app-footer">
+    <p>Built with ❤️ using <a href="https://docs.opencv.org/4.x/d5/d10/tutorial_js_root.html" target="_blank">OpenCV.js</a> & <a href="https://tesseract.projectnaptha.com/" target="_blank">Tesseract.js</a> — PlateVision © 2026</p>
+  </footer>
+
+  <!-- ═══ Scripts ═══ -->
+  <!-- OpenCV.js (WASM) -->
+  <script async src="https://docs.opencv.org/4.9.0/opencv.js" id="opencvScript" onload="onOpenCVReady()" type="text/javascript"></script>
+  
+  <!-- Tesseract.js -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+  <!-- App Scripts -->
+  <script src="js/utils.js"></script>
+  <script src="js/pipeline.js"></script>
+  <script src="js/ocr.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
